@@ -60,6 +60,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -194,7 +195,14 @@ func (p *Proxy) Start() error {
 	errc := make(chan error, len(p.configs))
 	p.lns = make([]net.Listener, 0, len(p.configs))
 	for ipPort, config := range p.configs {
-		ln, err := p.netListen()("tcp", ipPort)
+		var ln net.Listener
+		var err error
+		if strings.Contains(ipPort, ".sock") {
+			ln, err = p.netListen()("unix", ipPort)
+		} else {
+			ln, err = p.netListen()("tcp", ipPort)
+		}
+
 		if err != nil {
 			p.Close()
 			return err
