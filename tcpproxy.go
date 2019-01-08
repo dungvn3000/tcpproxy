@@ -444,8 +444,27 @@ func proxyCopy(errc chan<- error, dst, src net.Conn) {
 	src = UnderlyingConn(src)
 	dst = UnderlyingConn(dst)
 
-	_, err := io.Copy(dst, src)
+	//_, err := io.Copy(dst, src)
+	err := pipe(dst, src)
 	errc <- err
+}
+
+func pipe(src, dst io.ReadWriter) error {
+	//directional copy (64k buffer)
+	buff := make([]byte, 0xffff)
+	for {
+		n, err := src.Read(buff)
+		if err != nil {
+			return err
+		}
+		b := buff[:n]
+
+		//write out result
+		n, err = dst.Write(b)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 func (dp *DialProxy) keepAlivePeriod() time.Duration {
