@@ -444,8 +444,7 @@ func proxyCopy(errc chan<- error, dst, src net.Conn) {
 	src = UnderlyingConn(src)
 	dst = UnderlyingConn(dst)
 
-	buff := make([]byte, 0xffff)
-	_, err := io.CopyBuffer(dst, src, buff)
+	err := pipe(dst, src)
 	errc <- err
 }
 
